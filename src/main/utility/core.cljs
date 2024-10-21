@@ -78,10 +78,10 @@
 (defn input-on [this event function]
   (.. this -input (on event function)))
 
-(defn in-on-dragend [this function]
+(defn in-on-dragend! [this function]
   (input-on this "dragend" function))
 
-(defn in-on-drag [this function]
+(defn in-on-drag! [this function]
   (input-on this "drag" function))
 
 (defn set-xy-object! [obj x y]

@@ -58,8 +58,14 @@
 (defrecord RankComponent [rank])
 (defrecord SuitComponent [suit])
 (defrecord ScoreComponent [score])
-(defrecord TextureComponent [texture])
+;(defrecord TextureComponent [texture])
 (defrecord OrderComponent [order])
+(defrecord SpriteComponent [sprite])
+
+;input
+
+(defrecord DragComponent [bool x y])
+(defrecord EventComponent [event])
 
 (comment
 (defrecord MyStuff [])
