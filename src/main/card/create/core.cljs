@@ -69,6 +69,16 @@
         (e/remove-component name comps)
         (e/add-component name dragging))))
 
+(defn remove-dragging-comp [world name x y]
+  (let [compsbefore (e/get-all-components-on-entity world name)
+        comps (e/get-component world name t/DragComponent)
+        w (-> world
+              (e/remove-component name comps))
+        comps2 (e/get-all-components-on-entity w name)]
+    ;(println "Entity has following components: " compsbefore)
+    ;(println "Removed dragging. Entity has following components" comps2)
+    w))
+
 (defn dragging! [go x y state]
   (let [name-option (.-name go)
         world (:world @state)]
@@ -77,9 +87,19 @@
        (let [nw (add-dragging-component world name-option x y)]
          (update-scene-state! nw state)))))
 
+(defn dragend! [go x y state]
+  (let [name-option (.-name go)
+        world (:world @state)]
+    (when (and (ut/not-nil? world)
+               (ut/not-nil? name-option))
+      (let [nw (remove-dragging-comp world name-option x y)]
+        (update-scene-state! nw state)))))
+
 (defn creat [this state deck]
   (-> (create-world this deck)
       (update-scene-state! state))
-  (letfn [(drag [p go x y] (dragging! go x y state))]
-    (ut/in-on-drag! this drag)))
+  (letfn [(drag [p go x y] (dragging! go x y state))
+          (dragend [p go x y] (dragend! go x y state))]
+    (ut/in-on-drag! this drag)
+    (ut/in-on-dragend! this dragend)))
 
