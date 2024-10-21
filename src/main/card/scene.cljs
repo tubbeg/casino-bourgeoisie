@@ -3,6 +3,9 @@
             [utility.core :as ut]
             [card.preload.core :as p]
             [card.create.core :as c]
+            [card.update.core :as u]
+            [brute.entity :as e]
+            [brute.system :as sy]
             [card.types :as t]
             [card.default-deck.core :as default]
             [schema.core :as s]))
@@ -13,28 +16,19 @@
 (def super-args
    (array #js {:key "card" :active true}))
 
-(defn take-5-rand [deck]
-  [(rand-nth deck) (rand-nth deck)
-   (rand-nth deck) (rand-nth deck)
-   (rand-nth deck)])
+(def scene-state (atom {:world nil}))
 
-(defn card-to-sprite-card [c order score]
-  (let [gc {:card c
-            :score score}
-        sc {:id (str c)
-            :card gc
-            :order order}]
-    (s/validate t/SpriteCard sc)))
+(defn crte []
+  (this-as this
+           (c/creat this scene-state default/deck) this))
 
-(defn deck-to-sprite-deck [deck]
-  (->>
-   (for [i (-> deck (count) (range))]
-     (card-to-sprite-card (nth deck i) i i))
-   (into [])))
+(defn updte [time delta]
+  (this-as this
+           (u/update-scene this time delta scene-state) this))
 
-(defn create []
-  (this-as this (c/creat this (deck-to-sprite-deck default/deck))
-           this))
+(defn prld []
+  (this-as this
+           (p/preld this) this))
 
 (defn card-scene []
   (this-as this
@@ -48,10 +42,11 @@
       card-scene)
 
 (set! (.. card-scene -prototype -create)
-      create)
-
-(set! (.. card-scene -prototype -preload)
-      (fn [] (this-as this (p/preld this) this)))
+      crte)
 
 (set! (.. card-scene -prototype -update)
-      (fn [] nil))
+      updte)
+
+(set! (.. card-scene -prototype -preload)
+      prld)
+

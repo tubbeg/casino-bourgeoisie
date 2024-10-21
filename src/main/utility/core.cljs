@@ -39,21 +39,38 @@
 (defn set-interactive! [object]
   (. object (setInteractive)))
 
-(defn add-draggable-sprite! [this x y id]
-  (let [s (-> this
-              (add-sprite x y id)
-              (set-interactive!))]
-    (set-draggable! this s true)
-    s))
+(defn set-sprite-name! [sprite name]
+  (set! (.-name sprite) name))
+
+(defn add-draggable-sprite!
+  ([this x y texture name]
+   (let [s (-> this
+               (add-sprite x y texture)
+               (set-interactive!))]
+     (set-draggable! this s true)
+     (set-sprite-name! s name)
+     s))
+  ([this x y texture]
+   (let [s (-> this
+               (add-sprite x y texture)
+               (set-interactive!))]
+     (set-draggable! this s true)
+     s)))
 
 (defn add-tweens [this config]
   (.. this -tweens (add config)))
 
-(defn add-draggable-sprites! [coll x y this]
-  (->>
-   (for [i (-> coll (count) (range))]
-     (add-draggable-sprite! this x y (nth coll i)))
-   (into [])))
+(defn add-draggable-sprites!
+  ([coll x y this identifiers]
+   (->>
+    (for [i (-> coll (count) (range))]
+      (add-draggable-sprite! this x y (nth coll i)))
+    (into [])))
+  ([coll x y this]
+   (->>
+    (for [i (-> coll (count) (range))]
+      (add-draggable-sprite! this x y (nth coll i)))
+    (into []))))
 
 (defn print-js-object-properties [object]
   (-> object (js-keys) (println)))
@@ -77,3 +94,5 @@
 (defn set-y-object! [obj y]
   (set! (.-y obj) y))
 
+(defn zero-coll? [coll]
+  (-> coll (count) (zero?)))

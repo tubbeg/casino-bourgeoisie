@@ -1,63 +1,65 @@
 (ns card.create.core
   (:require [utility.core :as ut]
             [card.types :as t]
-            [schema.core :as s]))
+            [brute.entity :as e]
+            [brute.system :as sy]
+            [schema.core :as s]
+            [card.default-deck.core :as default]))
 
-(defn drag-card! [pointer gameObject dragX dragY]
-  (println "This function is TRIGGGERED >:O")
-  ;(println dragX dragY)
-  (set! (.-x gameObject) dragX)
-  (set! (.-y gameObject) dragY))
+(defn create-card [ card this system]
+  (let [card-entity (e/create-entity)
+        s (-> card (keys) (first))
+        r (-> card (vals) (first))
+        order (t/rank-to-int r)
+        score (t/rank-to-default-score r)
+        texture (t/->TextureComponent (str card))
+        rank-comp (t/->RankComponent r)
+        suit-comp (t/->SuitComponent s)
+        order-comp (t/->OrderComponent order)
+        score-comp (t/->ScoreComponent score)]
+    (ut/add-draggable-sprite! this 400 400 (str card) card-entity)
+    (-> system
+        (e/add-entity card-entity)
+        (e/add-component card-entity texture)
+        (e/add-component card-entity rank-comp)
+        (e/add-component card-entity suit-comp)
+        (e/add-component card-entity order-comp)
+        (e/add-component card-entity score-comp))))
 
-(defn displace-crds! [max-length sprites deck]
-  (let []
-   (loop [cards sprites
-          last 0]
-     (if (-> cards (count) (zero?))
-       nil
-       (let [f (first cards)
-             r (next cards)
-             c (count sprites)
-             width (/ max-length c)
-             displace (+ width last)]
-         (ut/set-x-object! f last)
-         (recur r displace))))))
+(defn create-deck [system this deck]
+  (loop [s system
+         d deck]
+    (if (ut/zero-coll? d)
+      s
+      (-> d
+          (first)
+          (create-card this s)
+          (recur (next d))))))
 
-(defn displace-cards! [max-length sprites deck]
-  (->> deck
-       (s/validate t/SpriteDeck)
-       (displace-crds! max-length sprites)))
+(defn add-system-functions [system]
+  system)
 
-(defn drag-end-conf
-  [object]
-  #js{:targets object
-      :x 0 
-      :y 0
-      :duration 200
-      :displayWidth (.-width object)
-      :displayHeight (.-height object)})
+(defn create-world [this deck]
+  (-> (e/create-system)
+      (create-deck this deck)
+      (add-system-functions)))
 
-(defn drag-card-end! [this object sprite-coll deck]
-  (when (ut/not-nil? object) 
-    (->> object (drag-end-conf) (ut/add-tweens this))
-    (displace-cards! 300 sprite-coll deck)))
+(defn update-scene-state! [new-state old-state]
+  (swap! old-state #(assoc % :world new-state)))
+(comment
+(defn create-sprites [this world]
+  (for [entity (e/get-all-entities-with-component
+                world t/TextureComponent)]
+    (let [texture (-> world
+                      (e/get-component
+                       entity t/TextureComponent)
+                      (:texture))] 
+      (ut/add-draggable-sprite! this 400 400 texture entity)))))
 
-(defn sd-to-id [deck]
-  (map #(:id %) deck))
-
-(defn create [this deck]
-  (let [sc (-> deck
-               (sd-to-id)
-               (ut/add-draggable-sprites! 0 0 this))
-        c (ut/add-container this 400 400)]
-    (letfn [(dce! [p g x y] (drag-card-end! this g sc deck))]
-      (ut/add-items-to-container! c sc)
-      (displace-cards! 300 sc deck)
-      (ut/in-on-dragend this  dce!)
-      (ut/in-on-drag this drag-card!))))
-
-(defn creat [this deck]
-  (->> deck
-       (s/validate t/SpriteDeck)
-       (create this)))
+(defn creat [this state deck]
+  (let [world (create-world this deck)
+        ;sprites (create-sprites this world)
+        ] 
+    ;(println "Sprite count" (count sprites))
+    (update-scene-state! world state)))
 

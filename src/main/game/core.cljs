@@ -1,5 +1,5 @@
 (ns game.core
-  (:require ["phaser" :refer (Scene AUTO Game)]
+  (:require ["phaser" :refer (Scene AUTO Game Sprite)]
             [clojure.core.async :as a]
             [goog.object :as gobj]
             [cljs.core.async.interop :refer-macros [<p!]]
@@ -15,7 +15,8 @@
                  :arcade arcade})
 
 (def scenes
-   (array   ui/ui-scene c/card-scene))
+   (array   ui/ui-scene 
+            c/card-scene))
 
 (println scenes)
 
