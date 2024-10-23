@@ -59,38 +59,9 @@
 (defrecord SuitComponent [suit])
 (defrecord ScoreComponent [score])
 ;(defrecord TextureComponent [texture])
-(defrecord OrderComponent [order])
+(defrecord SlotComponent [order pos max])
 (defrecord SpriteComponent [sprite])
 
 ;input
 
 (defrecord DragComponent [bool x y])
-(defrecord EventComponent [event])
-
-(comment
-(defrecord MyStuff [])
-
-(def myEntity (e/create-entity))
-(defrecord MyiNSTANCE [interesting stuff])
-(def testINsnace (->MyiNSTANCE :stuff :stuffer))
-(def testINsnace2 (MyiNSTANCE. :stufffest :stff))
-
-(defn my-system-func [system delta-time]
-  (let [entities (e/get-all-entities-with-component
-                  system MyiNSTANCE)]
-    (doseq [entity entities]
-      (let [c (e/get-component system entity MyiNSTANCE)]
-        (println "Found component" c)))))
-
-(defn create-systems [system]
-  (-> system
-      (sy/add-system-fn my-system-func)))
-
-(def sys
-  (-> (e/create-system)
-      (e/add-entity myEntity)
-      (e/add-component myEntity (->MyiNSTANCE :stuff :stuffer))
-      (create-systems)))
-
-(sy/process-one-game-tick sys 32)
-)
