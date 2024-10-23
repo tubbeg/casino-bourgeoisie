@@ -4,28 +4,35 @@
             [card.types :as t]
             [card.create.utility :as ct]))
 
-(defn overlap-left? [sprite slot]
-  (let [[origin-x _] (:pos slot)
+(defn overlap-left? [world entity]
+  (let [slot (ct/get-slot-comp world entity)
+        sprite (-> world (ct/get-sprite-comp entity) (:sprite))
+        [origin-x _] (:pos slot)
         padding 5
         w (-> sprite (.-width) (/ 2))
         x (.-x sprite)] 
       (< x (- origin-x w))))
 
-(defn overlap-right? [sprite slot]
-  (let [[origin-x _] (:pos slot)
+(defn overlap-right?  [world entity]
+  (let [slot (ct/get-slot-comp world entity)
+        sprite (-> world (ct/get-sprite-comp entity) (:sprite))
+        [origin-x _] (:pos slot)
         padding 5
         w (-> sprite (.-width) (/ 2))
         x (.-x sprite)]
     (> x (+ origin-x w))))
 
-(defn entity-has-matching-slot-order [world entity slot1]
-  (let [slot2 (e/get-component world entity t/SlotComponent)]
-   (= (:order slot1) (:order slot2))))
+(defn entity-has-matching-slot-nr [world entity nr]
+  (->
+   world
+   (ct/get-slot-comp entity)
+   (:order)
+   (= nr)))
 
-(defn find-entity-with-slot-order [world slot]
+(defn find-entity-with-slot-order [world nr]
   (let [e (e/get-all-entities-with-component
            world t/SlotComponent)
-        f (filter #(entity-has-matching-slot-order world % slot) e)]
+        f (filter #(entity-has-matching-slot-nr world % nr) e)]
     (first f)))
 
 (defn clip-one [n]
@@ -47,8 +54,9 @@
 (defn overlap? [overlap]
   (or (= overlap :left) (= overlap :right)))
 
-(defn set-xy-sprite-slot! [slot sprite]
-  (let [[x y] (:pos slot)]
+(defn set-xy-sprite-slot! [slot sprite-comp]
+  (let [[x y] (:pos slot)
+        sprite (:sprite sprite-comp)]
     (ut/set-x-object! sprite x)
     (ut/set-y-object! sprite y)))
 
@@ -67,8 +75,9 @@
         (e/add-component entity1 s2)
         (e/add-component entity2 s1))))
 
-(defn overlap-proto [system entity slot overlap]
-  (let [next-slot {:order (next-slot slot overlap)}
+(defn overlap-proto [system entity overlap]
+  (let [slot (ct/get-slot-comp system entity)
+        next-slot (next-slot slot overlap)
         next-ent (find-entity-with-slot-order system next-slot)]
     (println next-slot "NEXT")
     (swap-slots system entity next-ent)))
@@ -81,7 +90,6 @@
       s
       (let [f (first ents)
             rem (next ents)
-            slot (e/get-component s f t/SlotComponent)
             dragging (e/get-component s f t/DragComponent)
             sprite (-> (e/get-component s f t/SpriteComponent)
                        (:sprite))
@@ -89,14 +97,14 @@
             ]
         (cond
           (nil? dragging) (do
-                            (set-xy-sprite-slot! slot sprite)
+                            (reset-entity-to-slot! s f)
                             (recur rem s))
-          (overlap-right? sprite slot)
-          (let [nw (overlap-proto s f slot :right)]
-            ;(reset-entity-to-slot! nw f)
+          (overlap-right? s f)
+          (let [nw (overlap-proto s f :right)]
+            (reset-entity-to-slot! nw f)
             (recur rem nw))
-          (overlap-left? sprite slot)
-          (let [nw (overlap-proto s f slot :left)]
-            ;(reset-entity-to-slot! nw f)
+          (overlap-left? s f)
+          (let [nw (overlap-proto s f :left)]
+            (reset-entity-to-slot! nw f)
             (recur rem nw))
           :else (recur rem s))))))
