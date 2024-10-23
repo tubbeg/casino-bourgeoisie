@@ -13,8 +13,11 @@
 (defn get-sprite-comp [world n]
   (e/get-component world n t/SpriteComponent))
 (defn get-all-drag-entities [world]
-  (e/get-all-entities-with-component
+  (e/get-all-entities-with-component 
    world t/DragComponent))
+(defn get-all-slot-entities [world]
+  (e/get-all-entities-with-component
+   world t/SlotComponent))
 (defn remove-drag-comp [world name]
   (let [comps (get-drag-comp world name)]
     (e/remove-component world name comps)))
