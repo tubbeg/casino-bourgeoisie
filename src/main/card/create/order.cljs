@@ -43,13 +43,11 @@
 
 (defn next-slot [slot next]
   (let [max (:max slot)
-        left (-> slot (:order) (- 1) )
-        right (-> slot (:order) (+ 1))
-        else (:order slot)]
-    (case next
-      :left left
-      :right right
-      else)))
+        left (-> slot (:order) (- 1) (clip-one))
+        right (-> slot (:order) (+ 1) (clip-max max))]
+    (if (= :left next)
+      left
+      right)))
 
 (defn overlap? [overlap]
   (or (= overlap :left) (= overlap :right)))
@@ -91,8 +89,6 @@
       (let [f (first ents)
             rem (next ents)
             dragging (e/get-component s f t/DragComponent)
-            sprite (-> (e/get-component s f t/SpriteComponent)
-                       (:sprite))
             ;overlap (overlap-width-sprite2? sprite slot)
             ]
         (cond

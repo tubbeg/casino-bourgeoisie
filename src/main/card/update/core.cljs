@@ -6,7 +6,13 @@
  no physics or time dependent functions to
  speak of")
 
+
+(defn update-game-state! [system state]
+  (swap! state #(assoc % :world system)))
+
 (defn update-scene [this time delta state]
   (let [system (:world @state)]
     (when (ut/not-nil? system)
-      (sy/process-one-game-tick system delta))))
+      (-> system
+          (sy/process-one-game-tick delta)
+          (update-game-state! state)))))
