@@ -9,6 +9,9 @@
 
 (println "hello hello hello")
 
+(def root (. js/document (createElement "div")))
+(.. js/document -body (appendChild root))
+
 (def y #js{:y 200})
 (def arcade #js{:gravity y})
 (def physics #js{:default "arcade"
@@ -20,10 +23,17 @@
 
 (println scenes)
 
+(def target #js{:target root})
+(def input #js{:mouse target
+               :touch target})
+(def dom #js{:createContainer true})
 (def config #js{:type AUTO
                 :width 800
                 :height 600,
                 :scene scenes
-                :physics physics})
+                :physics physics
+                :dom dom
+                :parent root
+                :input input})
 
 (def app (new Game config))

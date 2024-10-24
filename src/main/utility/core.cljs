@@ -90,6 +90,7 @@
 (defn in-on-drag! [this function]
   (input-on this "drag" function))
 
+
 (defn gameobject-on-pointerdown 
   "Function needs to take 2 args:
    fn [ptr this] (logic here)
@@ -163,3 +164,17 @@
 (defn canvas-to-size [canvas]
   [(.-width canvas)
    (.-height canvas)])
+
+(defn load-html-texture [^js this key path [x y]]
+  (println path)
+  (.. this -load (htmlTexture key path x y)))
+
+(defn load-html-file [this key path]
+  (println path)
+  (.. this -load (html key path)))
+
+;this.add.dom(x, y).createFromCache(key);
+(defn add-html-dom [^js this x y k]
+  (let [dom (.. this -add (dom x y))]
+    (. dom (createFromCache ^js k))
+    dom))

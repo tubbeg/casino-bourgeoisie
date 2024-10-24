@@ -11,11 +11,24 @@
 (def super-args
    (array #js {:key "ui" :active true}))
 
+(def background "./assets/background.png")
+(def push "./assets/html/push.html")
+(def discard"./assets/html/discard.html")
+
 (defn preld [this]
-  (ut/load-image! this "background" "./assets/background.png"))
+  (ut/load-image! this "background" background)
+  (ut/load-html-file this "push" push)
+  (ut/load-html-file this "discard" discard)
+  )
 
 (defn creat [this]
-  (ut/add-image this 400 300 "background"))
+  (let [[x y] (-> this
+                  (ut/get-canvas)
+                  (ut/canvas-to-size))]
+    ;(ut/add-image this 400 300 "background")
+    (ut/add-html-dom this (/ x 2) (/ y 1.2) "push")
+    (ut/add-html-dom this (/ x 1.5) (/ y 1.2) "discard")
+    ))
 
 (defn ui-scene []
   (this-as this
