@@ -1,5 +1,6 @@
 (ns card.create.core
   (:require [utility.core :as ut]
+            [utility.events :as events]
             [card.types :as t]
             [brute.entity :as e]
             [brute.system :as sy]
@@ -9,7 +10,8 @@
             [card.create.card :as cr]
             [card.create.utility :as ct]
             [card.create.order :as ord]
-            [card.create.select :as sel]))
+            [card.create.select :as sel]
+            [utility.events :as event]))
 
 (defn add-system-functions [system]
   (-> system
@@ -38,10 +40,11 @@
                 (ut/get-canvas)
                 (ut/canvas-to-size)
                 (to-def-position))]
-   (-> (create-world this deck pos)
-       (ct/update-scene-state! state))
-   (letfn [(drag [p go x y] (dr/dragging! p go x y state))
-           (dragend [p go x y] (dr/dragend! go state))]
-     (ut/in-on-drag! this drag)
-     (ut/in-on-dragend! this dragend))))
+    (event/add-on-event event/eventEmitter "stupid" #(println %))
+    (-> (create-world this deck pos)
+        (ct/update-scene-state! state))
+    (letfn [(drag [p go x y] (dr/dragging! p go x y state))
+            (dragend [p go x y] (dr/dragend! go state))]
+      (ut/in-on-drag! this drag)
+      (ut/in-on-dragend! this dragend))))
 

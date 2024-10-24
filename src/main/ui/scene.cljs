@@ -1,7 +1,7 @@
 (ns ui.scene
   (:require ["phaser" :refer (Scene)]
-             [goog.object :as gobj]
-             [utility.core :as ut]))
+            [utility.core :as ut]
+            [utility.events :as event]))
 
 
 ; you need to set ES5 flag in your shadow-cljs.edn config file
@@ -20,12 +20,34 @@
   (ut/load-html-file this "push" push)
   (ut/load-html-file this "discard" discard))
 
+
+;myButton.addEventListener ('click', callback);
+
+(defn add-click-callback! [element function]
+  (. element (addEventListener "click" function)))
+
+(def input-state (atom {:discard false
+                        :push false}))
+
+;eventsCenter.emit('update-count', this.count)
+
+(defn update-state! [state key value]
+  (println "Updating state" key value)
+  (event/emit-event event/eventEmitter "stupid" #js{:you :stupid})
+  (swap! state #(assoc % key value)))
+
 (defn creat [this]
   (let [[x y] (-> this
                   (ut/get-canvas)
-                  (ut/canvas-to-size))]
-    (ut/add-html-dom this (/ x 2.5) (/ y 1.2) "push")
-    (ut/add-html-dom this (/ x 1.7) (/ y 1.2) "discard")))
+                  (ut/canvas-to-size))
+        push (ut/add-html-dom
+              this (/ x 2.5) (/ y 1.2) "push")
+        discard (ut/add-html-dom
+                 this (/ x 1.7) (/ y 1.2) "discard")
+        pc (. push (getChildByID "push"))
+        dc (. discard (getChildByID "discard"))]
+    (add-click-callback! pc #(update-state! input-state :push true))
+    (add-click-callback! dc #(update-state! input-state :discard true))))
 
 (defn ui-scene []
   (this-as this

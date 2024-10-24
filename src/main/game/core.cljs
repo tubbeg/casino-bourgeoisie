@@ -46,7 +46,8 @@
 
 (def scenes
    (array   ui/ui-scene 
-            c/card-scene))
+            c/card-scene
+            ))
 
 (println scenes)
 
