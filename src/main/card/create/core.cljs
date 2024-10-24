@@ -31,7 +31,7 @@
       (add-system-functions)))
 
 (defn to-def-position [[x y]]
-  [(/ x 2.5) (/ y 1.5)])
+  [(/ x 4) (/ y 1.5)])
 
 (defn creat [this state deck]
   (let [pos (-> this

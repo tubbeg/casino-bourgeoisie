@@ -27,14 +27,19 @@
     (ut/gameobject-on-pointerdown sprite switch-down-ptr)
     (ut/gameobject-on-pointerup sprite switch-up-ptr))
 
+(defn add-sprite! [this x y txt entity]
+  (let [s (ut/add-draggable-sprite!
+           this x y txt "entity" entity)]
+    ;(ut/set-sprite-scale! s 2)
+    s))
+
 (defn create-card [card this [x y] order system m]
   (let [card-entity (e/create-entity)
         suit (-> card (keys) (first))
         rank (-> card (vals) (first))
         margin 15 ; pixels for padding
         txt (str card)
-        sprte (ut/add-draggable-sprite!
-               this x y txt "entity" card-entity)
+        sprte (add-sprite! this x y txt card-entity)
         pos-x (calc-x-position x order sprte margin)
         score (t/rank-to-default-score rank)
         sprite-comp (t/->SpriteComponent sprte)

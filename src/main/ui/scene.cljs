@@ -16,19 +16,16 @@
 (def discard"./assets/html/discard.html")
 
 (defn preld [this]
-  (ut/load-image! this "background" background)
+  ;(ut/load-image! this "background" background)
   (ut/load-html-file this "push" push)
-  (ut/load-html-file this "discard" discard)
-  )
+  (ut/load-html-file this "discard" discard))
 
 (defn creat [this]
   (let [[x y] (-> this
                   (ut/get-canvas)
                   (ut/canvas-to-size))]
-    ;(ut/add-image this 400 300 "background")
-    (ut/add-html-dom this (/ x 2) (/ y 1.2) "push")
-    (ut/add-html-dom this (/ x 1.5) (/ y 1.2) "discard")
-    ))
+    (ut/add-html-dom this (/ x 2.5) (/ y 1.2) "push")
+    (ut/add-html-dom this (/ x 1.7) (/ y 1.2) "discard")))
 
 (defn ui-scene []
   (this-as this

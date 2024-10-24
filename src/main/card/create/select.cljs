@@ -15,7 +15,8 @@
 (defn rm-sel-comp [system entity]
   (let [sel (ct/get-sel-comp system entity)
         s (-> system (ct/get-sprite-comp entity) (:sprite))]
-    (ut/clear-tint-sprite! s)
+    ;(ut/clear-tint-sprite! s)
+    (ut/clear-postfx-sprite! s)
     (-> system
         (e/remove-component entity sel))))
 
@@ -43,7 +44,8 @@
 (defn add-select [system entity]
   (let [sel (t/->SelectComponent) 
         s (-> system (ct/get-sprite-comp entity) (:sprite))]
-    (ut/tint-sprite! s my-tint)
+    ;(ut/tint-sprite! s my-tint)
+    (ut/add-postfx-glow-to-sprite! s)
     (e/add-component system entity sel)))
 
 (defn add-or-remove-sel-comp [system entity]

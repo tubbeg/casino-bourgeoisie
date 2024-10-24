@@ -166,11 +166,9 @@
    (.-height canvas)])
 
 (defn load-html-texture [^js this key path [x y]]
-  (println path)
   (.. this -load (htmlTexture key path x y)))
 
 (defn load-html-file [this key path]
-  (println path)
   (.. this -load (html key path)))
 
 ;this.add.dom(x, y).createFromCache(key);
@@ -178,3 +176,29 @@
   (let [dom (.. this -add (dom x y))]
     (. dom (createFromCache ^js k))
     dom))
+
+(defn set-sprite-scale! [sprite scale]
+  (set! (.-scale sprite) scale))
+
+(defn load-svg
+  "Loads an svg file in the same way as loading a png.
+   size-or-scale can be for example: { scale: 2.5 }
+   or  { width: 300, height: 600 }"
+  [this key path svg-config]
+  (.. this -load (svg key path svg-config)))
+
+(comment
+"const sprite = this.add.sprite ();
+
+sprite.preFX.addGlow ();
+sprite.postFX.addGlow ();
+")
+
+(defn add-prefx-glow-to-sprite! [sprite]
+  (.. sprite -preFX (addGlow)))
+
+(defn add-postfx-glow-to-sprite! [sprite]
+  (.. sprite -postFX (addGlow "0xd5df0e")))
+
+(defn clear-postfx-sprite! [sprite]
+  (.. sprite -postFX (clear)))
