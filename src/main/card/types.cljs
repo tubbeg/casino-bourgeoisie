@@ -65,3 +65,10 @@
 ;input
 
 (defrecord DragComponent [bool x y])
+(defrecord SelectComponent [])
+
+; this is certainly not an ideal way to use
+; class instances. There are far better ways
+; to do this. But it becomes a bit tricky to fit
+; an ECS into an existing game framework
+(defrecord TweensComponent [tweens])

@@ -20,7 +20,8 @@
 
 (defn crte []
   (this-as this
-           (c/creat this scene-state (take 5 default/deck)) this))
+           (c/creat this scene-state (take 5 default/deck))
+           this))
 
 (defn updte [time delta]
   (this-as this
