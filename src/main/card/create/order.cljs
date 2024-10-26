@@ -2,7 +2,8 @@
   (:require [utility.core :as ut]
             [brute.entity :as e]
             [card.types :as t]
-            [card.create.utility :as ct]))
+            [card.create.utility :as ct]
+            [card.create.sort :as sort]))
 
 (defn selected? [system entity]
   (-> (ct/get-sel-comp system entity)
@@ -100,7 +101,7 @@
                (ct/get-sprite-comp entity)
                (:sprite)
                (.-height)
-               (/ 2))
+               (/ 3))
         adj-y (if (selected? world entity) (- y sw) y)]
     [x adj-y]))
 
@@ -109,26 +110,17 @@
     (when (move? world entity pos) 
       (add-card-tween! world entity pos 100))))
 
-(defn swap-slots [ entity1 system entity2]
-  (let [s1 (ct/get-slot-comp system entity1)
-        s2 (ct/get-slot-comp system entity2)]
-    (-> system
-        (e/remove-component entity1 s1)
-        (e/remove-component entity2 s2)
-        (e/add-component entity1 s2)
-        (e/add-component entity2 s1))))
-
 (defn swap-left [system entity]
   (-> system
       (next-slot-left entity)
       (next-entity system)
-      (swap-slots system entity)))
+      (ct/swap-slots system entity)))
 
 (defn swap-right [system entity]
   (-> system
       (next-slot-right entity)
       (next-entity system)
-      (swap-slots system entity)))
+      (ct/swap-slots system entity)))
 
 (defn swap-if-overlap [system entity]
   (cond
@@ -136,8 +128,8 @@
     (overlap-left? system entity) (swap-left system entity)
     :else system))
 
-(defn order-cards [system delta-time]
-  (loop [s system
+(defn order-cards [system delta-time] 
+  (loop [s  system
          ents (ct/get-all-slot-entities system)]
     (if (ut/zero-coll? ents)
       s

@@ -18,10 +18,12 @@
 
 (def scene-state (atom {:world nil}))
 
+
+(def deck (->> default/deck
+              (ut/take-rand-unique-coll 5)))
+
 (defn crte []
-  (this-as this
-           (c/creat this scene-state (take 5 default/deck))
-           this))
+  (this-as this (c/creat this scene-state deck) this))
 
 (defn updte [time delta]
   (this-as this

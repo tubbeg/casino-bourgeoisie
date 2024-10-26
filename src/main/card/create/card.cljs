@@ -9,6 +9,7 @@
         mult (*  order (+ w margin))]
     (+ origin-x mult)))
 
+
 (defn switch-down-ptr [ptr this]
   (->> ptr
        (ut/ptr-duration)

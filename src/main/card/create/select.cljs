@@ -41,11 +41,13 @@
 
 (def my-tint 7329113.367983451)
 
+
 (defn add-select [system entity]
   (let [sel (t/->SelectComponent) 
         s (-> system (ct/get-sprite-comp entity) (:sprite))]
     ;(ut/tint-sprite! s my-tint)
     (ut/add-postfx-glow-to-sprite! s)
+    (ct/print-debug-info-entity system entity)
     (e/add-component system entity sel)))
 
 (defn add-or-remove-sel-comp [system entity]

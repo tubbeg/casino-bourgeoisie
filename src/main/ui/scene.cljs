@@ -1,7 +1,7 @@
 (ns ui.scene
   (:require ["phaser" :refer (Scene)]
             [utility.core :as ut]
-            [utility.events :as event]))
+            [utility.events :as events]))
 
 
 ; you need to set ES5 flag in your shadow-cljs.edn config file
@@ -14,40 +14,101 @@
 (def background "./assets/background.png")
 (def push "./assets/html/push.html")
 (def discard"./assets/html/discard.html")
+(def sort-url "./assets/html/sort.html")
+
+(defn def-pos [[x y] key]
+  (case key
+    :discard [(/ x 1.6) (/ y 1.2)]
+    :push [(/ x 2.65) (/ y 1.2)]
+    :sort [(/ x 2) (/ y 1.2)]
+    [x y]))
 
 (defn preld [this]
   ;(ut/load-image! this "background" background)
   (ut/load-html-file this "push" push)
-  (ut/load-html-file this "discard" discard))
-
+  (ut/load-html-file this "discard" discard)
+  (ut/load-html-file this "sort" sort-url))
 
 ;myButton.addEventListener ('click', callback);
 
 (defn add-click-callback! [element function]
   (. element (addEventListener "click" function)))
 
-(def input-state (atom {:discard false
-                        :push false}))
+(defn emit-event! [message data]
+  (events/emit-event events/eventEmitter message data))
 
-;eventsCenter.emit('update-count', this.count)
+(def input-state (atom {:push false
+                        :discard false
+                        :rank false
+                        :suit false}))
 
-(defn update-state! [state key value]
-  (println "Updating state" key value)
-  (event/emit-event event/eventEmitter "stupid" #js{:you :stupid})
-  (swap! state #(assoc % key value)))
+(defn toggle-state! [state key]
+  (if (key @state)
+    (swap! state #(assoc % key false))
+    (swap! state #(assoc % key true))))
+
+(defn toggle-suit-state []
+  (toggle-state! input-state :suit))
+
+(defn toggle-rank-state []
+  (toggle-state! input-state :rank))
+
+(defn toggle-push-state []
+  (toggle-state! input-state :push))
+
+(defn toggle-discard-state []
+  (toggle-state! input-state :discard))
+
+(defn emit-state! []
+  (emit-event! events/ui-message @input-state))
+
+(defn update-event! [key] 
+  (case key
+    :push  (toggle-push-state)
+    :discard (toggle-discard-state)
+    :suit (toggle-suit-state)
+    :rank (toggle-rank-state)
+    nil)
+  (emit-state!))
+
+(defn add-button [this [x y] key]
+  (ut/add-html-dom this x y key))
+
+(defn add-cb-to-el! [element id function]
+  (-> element
+      (. (getChildByID id))
+      (add-click-callback! function)))
+
+(defn add-discard-callback! [this size]
+  (-> this
+      (add-button (def-pos size :discard) "discard")
+      (add-cb-to-el! "discard" #(update-event! :discard))))
+
+(defn add-push-callback! [this size]
+  (-> this
+      (add-button (def-pos size :push) "push")
+      (add-cb-to-el! "push" #(update-event! :push))))
+
+(defn add-sort-callback! [this size]
+  (let [pos (def-pos size :sort)
+        html (add-button this pos "sort")]
+    (add-cb-to-el! html "rank" #(update-event! :suit))
+    (add-cb-to-el! html "suit" #(update-event! :rank))))
+
+(defn reset-input-state! [] 
+  (let [s {:discard false
+           :push false
+           :rank false
+           :suit false}]
+    (swap! input-state (fn [_] s))))
 
 (defn creat [this]
-  (let [[x y] (-> this
-                  (ut/get-canvas)
-                  (ut/canvas-to-size))
-        push (ut/add-html-dom
-              this (/ x 2.5) (/ y 1.2) "push")
-        discard (ut/add-html-dom
-                 this (/ x 1.7) (/ y 1.2) "discard")
-        pc (. push (getChildByID "push"))
-        dc (. discard (getChildByID "discard"))]
-    (add-click-callback! pc #(update-state! input-state :push true))
-    (add-click-callback! dc #(update-state! input-state :discard true))))
+  (let [pos (-> this (ut/get-canvas) (ut/canvas-to-size))
+        cr events/card-message] 
+    (events/add-event-listener! cr #(reset-input-state!))
+    (add-push-callback! this pos)
+    (add-discard-callback! this pos)
+    (add-sort-callback! this pos)))
 
 (defn ui-scene []
   (this-as this

@@ -202,3 +202,24 @@ sprite.postFX.addGlow ();
 
 (defn clear-postfx-sprite! [sprite]
   (.. sprite -postFX (clear)))
+
+
+(defn coll-has-elem? [elem coll]
+  (let [hm (map #(hash %) coll)
+        he (hash elem)
+        f (filter #(= % he) hm)]
+    (-> f (count) (zero?) (not))))
+
+(defn take-rand-unique-coll [nr  coll]
+  (loop [c []
+         n nr]
+    (if (and (> n 0) (> (count coll) nr))
+      (let [f (rand-nth coll)]
+        (if (coll-has-elem? f c)
+          (recur c n)
+          (recur (conj c f) (- n 1))))
+      c)))
+
+
+(defn set-visibility-sprite! [sprite bool]
+  (. sprite (setVisible bool)))
