@@ -1,4 +1,4 @@
-(ns card.create.order 
+(ns card.create.order
   (:require [utility.core :as ut]
             [brute.entity :as e]
             [card.types :as t]
@@ -15,16 +15,16 @@
         sprite (-> world (ct/get-sprite-comp entity) (:sprite))
         [origin-x _] (:pos slot)
         padding 5
-        w (-> sprite (.-width) )
-        x (.-x sprite)] 
-      (< x (- origin-x w))))
+        w (-> sprite (.-width))
+        x (.-x sprite)]
+    (< x (- origin-x w))))
 
 (defn overlap-right?  [world entity]
   (let [slot (ct/get-slot-comp world entity)
         sprite (-> world (ct/get-sprite-comp entity) (:sprite))
         [origin-x _] (:pos slot)
         padding 5
-        w (-> sprite (.-width) )
+        w (-> sprite (.-width))
         x (.-x sprite)]
     (> x (+ origin-x w))))
 
@@ -35,7 +35,7 @@
    (:order)
    (= nr)))
 
-(defn next-entity [ nr world]
+(defn next-entity [nr world]
   (let [e (e/get-all-entities-with-component
            world t/SlotComponent)
         f (filter #(entity-has-matching-slot-nr world % nr) e)]
@@ -49,7 +49,7 @@
 
 (defn next-slot-right [world entity]
   (let [slot (ct/get-slot-comp world entity)
-        max (:max slot)] 
+        max (:max slot)]
     (-> slot (:order) (+ 1) (clip-max max))))
 
 (defn next-slot-left [world entity]
@@ -62,11 +62,11 @@
       (nil?)))
 
 (defn get-tweens [world]
-   (let [ents (e/get-all-entities-with-component
-               world t/TweensComponent)]
-     (-> world
-         (e/get-component (first ents) t/TweensComponent)
-         (:tweens))))
+  (let [ents (e/get-all-entities-with-component
+              world t/TweensComponent)]
+    (-> world
+        (e/get-component (first ents) t/TweensComponent)
+        (:tweens))))
 
 (defn add-card-tween! [world entity [x y] duration]
   (let [sprite (-> world
@@ -106,10 +106,18 @@
     [x adj-y]))
 
 (defn move-card! [world entity]
-  (let [pos (calc-pos world entity)]
-    (when (move? world entity pos) 
+  (let [pos (calc-pos world entity)
+        [x y] pos
+        s (ct/get-sprite-comp world entity)]
+    (when (move? world entity pos)
+      ;(ut/set-xy-object! (:sprite s) x y)
       (add-card-tween! world entity pos 100))))
 
+(comment
+  (defn move-card! [world entity]
+    (let [pos (calc-pos world entity)]
+      (when (move? world entity pos)
+        (add-card-tween! world entity pos 100)))))
 (defn swap-left [system entity]
   (-> system
       (next-slot-left entity)
@@ -128,13 +136,27 @@
     (overlap-left? system entity) (swap-left system entity)
     :else system))
 
-(defn order-cards [system delta-time] 
-  (loop [s  system
-         ents (ct/get-all-slot-entities system)]
-    (if (ut/zero-coll? ents)
-      s
-      (let [f (first ents)
-            rem (next ents)]
-        (move-card! s f)
-        (-> (swap-if-overlap s f)
-            (recur rem))))))
+
+(def time-state (atom {:totaltime 0 :run false}))
+
+(defn update-time-state! [dt limit]
+;(println "Checknig")
+  (if (> (:totaltime @time-state) limit)
+    (swap! time-state #(assoc % :run true))
+    (let [current (:totaltime @time-state)]
+ ;     (println "Not running")
+      (swap! time-state #(assoc % :totaltime (+ dt current))))))
+
+(defn order-cards [system delta-time]
+  (update-time-state! delta-time 500)
+  (if (:run @time-state)
+    (loop [s  system
+           ents (ct/get-all-slot-entities system)]
+      (if (ut/zero-coll? ents)
+        s
+        (let [f (first ents)
+              rem (next ents)]
+          (move-card! s f)
+          (-> (swap-if-overlap s f)
+              (recur rem)))))
+    system))
