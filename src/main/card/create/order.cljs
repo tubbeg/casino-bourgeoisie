@@ -19,7 +19,7 @@
          sprite (-> world (ct/get-sprite-comp entity) (:sprite))
          [origin-x _] (:pos slot)
          padding 5
-         w (-> sprite (.-width))
+         w (-> sprite (.-width) (/ 2))
          x (.-x sprite)]
      (< x (- origin-x w))))
 
@@ -28,7 +28,7 @@
          sprite (-> world (ct/get-sprite-comp entity) (:sprite))
          [origin-x _] (:pos slot)
          padding 5
-         w (-> sprite (.-width))
+         w (-> sprite (.-width) (/ 2))
          x (.-x sprite)]
      (> x (+ origin-x w))))
 
@@ -155,11 +155,7 @@
       ;(ut/set-xy-object! (:sprite s) x y)
        (add-card-tween! world entity pos 150))))
 
- (comment
-   (defn move-card! [world entity]
-     (let [pos (calc-pos world entity)]
-       (when (move? world entity pos)
-         (add-card-tween! world entity pos 100)))))
+
  (defn swap-left [system entity]
    (-> system
        (next-slot-left entity)
@@ -172,15 +168,16 @@
        (next-entity system)
        (ct/swap-slots system entity)))
 
+ (def has-sorted-state (atom {:sorted false}))
+
  (defn swap-if-overlap [system entity]
-   (cond
+   (cond 
+     (:sorted @has-sorted-state) system
      (overlap-right? system entity) (swap-right system entity)
      (overlap-left? system entity) (swap-left system entity)
      :else system))
 
  (def time-state (atom {:time 0}))
-
- (def has-sorted-state (atom {:sorted false}))
 
  (defn reset-sorted-state! []
    (swap! has-sorted-state #(assoc % :sorted false)))
@@ -200,14 +197,12 @@
        (let [f (first ents)
              rem (next ents)]
          (move-card! s f)
-         (if (:sorted @has-sorted-state)
-           (recur s rem)
-           (-> (swap-if-overlap s f)
-               (recur rem)))))))
+         (-> (swap-if-overlap s f)
+             (recur rem))))))
 
 (defn order-cards [system dt]
   (add-time! dt)
-  (if (run? 100)
+  (if (run? 300)
     (let [s (order-deck system dt)]
       (when (:sorted @has-sorted-state)
         (reset-sorted-state!))

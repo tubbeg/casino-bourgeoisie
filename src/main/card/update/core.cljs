@@ -11,7 +11,7 @@
   (swap! state #(assoc % :world system)))
 
 (defn update-scene [this time delta state]
-  (->> this (ut/get-all-tweens-scene) (count) (println "Number of tweens: "))
+  ;(->> this (ut/get-all-tweens-scene) (count) (println "Number of tweens: "))
   (let [system (:world @state)]
     (when (ut/not-nil? system)
       (-> system
