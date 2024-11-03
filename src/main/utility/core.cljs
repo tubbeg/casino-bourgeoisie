@@ -39,6 +39,9 @@
 (defn set-interactive! [object]
   (. object (setInteractive)))
 
+(defn disable-interactive! [object]
+  (. object (disableInteractive)))
+
 (defn set-sprite-name! [sprite name]
   (set! (.-name sprite) name))
 
@@ -147,6 +150,7 @@
            {:targets (array sprite)
             :x x
             :y y
+            ;:delay 150
             :displayWidth  (.-width sprite)
             :displayHeight  (.-height sprite)
             :duration duration}] 
@@ -223,3 +227,20 @@ sprite.postFX.addGlow ();
 
 (defn set-visibility-sprite! [sprite bool]
   (. sprite (setVisible bool)))
+
+
+(defn get-all-tweens-scene [scene]
+  (.. scene -tweens -tweens))
+
+(defn get-all-tweens-tm [tweens-manager]
+  (. tweens-manager -tweens))
+
+(defn tween-has-target? [tween game-object]
+  (let [t (.-targets tween)
+        f (filter #(= (hash game-object) (hash %)) t)]
+    (> (count f) 0)))
+
+(defn sprite-has-tween? [tweens-manager sprite]
+  (let [t (get-all-tweens-tm tweens-manager)
+        f (filter #(tween-has-target? % sprite) t)] 
+    (> (count f) 0)))

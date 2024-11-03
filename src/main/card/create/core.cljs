@@ -20,6 +20,7 @@
   (-> system
       (sy/add-system-fn dr/on-drag-fn)
       (sy/add-system-fn ord/order-cards)
+      (sy/add-system-fn sort/sort-rank)
       (sy/add-system-fn sel/add-remove-select-components)))
 
 (defn add-tweens [system this]
@@ -38,50 +39,16 @@
 (defn to-def-position [[x y]]
   [(/ x 4) (/ y 1.6)])
 
-(defn sort-rank? [data]
-  (:rank data))
-
-(defn sort-suit? [data]
-  (:suit data))
-
-(defn discard? [data]
-  (:discard data))
-
-(defn push? [data]
-  (:push data))
 
 (defn reset-message! []
   (let [msg events/card-message
         ee events/eventEmitter]
    (event/emit-event ee msg "reset")))
 
-(defn sort-cards [system data]
-  (cond
-    (sort-rank? data) (sort/sort-rank-world system)
-    (sort-suit? data) system
-    (discard? data) system
-    (push? data) system
-    :else system))
-
 (defn handle-input-events [data state]
   (println "Data:" data)
   (reset-message!)
-  (let [world (:world @state)]
-    (when (ut/not-nil? world)
-      (let [s (sort-cards world data)
-            dbg-data1 (ct/get-debug-info-system s)
-            dbg-data2 (ct/get-debug-info-system world)
-            h1 (hash dbg-data1)
-            h2 (hash dbg-data2)]
-        (println "hash" h1 h2)
-        (println "equals hash? " (= h1 h2))
-        (ct/print-debug-info-system s)
-        (ct/set-visibility-all-sprites! world false)
-        (ct/update-scene-state! s state)
-        (ct/set-visibility-all-sprites! world true)
-        (let [dgb-data2 (ct/get-debug-info-system (:world @state))]
-          (println "Hash2 " (hash dgb-data2))
-          (println "equals2? " (= (hash dgb-data2) h1)))))))
+  (sort/set-sort-rank!))
 
 (defn creat [this state deck]
   (let [pos (-> this

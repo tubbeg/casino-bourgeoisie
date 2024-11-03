@@ -3,7 +3,8 @@
     [card.create.utility :as ct]
     [brute.entity :as e]
     [utility.core :as ut]
-    [card.types :as t]))
+    [card.types :as t]
+    [card.create.order :as ord]))
 
 (defn sort-suit-world [world])
 
@@ -42,8 +43,6 @@
               (find-slot order))]
    [(:order sl) (:pos sl) (:max sl)]))
 
-
-
 (defn create-sort-coll [world]
   (let [ents (-> (get-all-ents-with-sprite-slots world)
                  (sort-entities-by-rank world))]
@@ -59,13 +58,11 @@
                     :pos p :max m}]
           (recur (conj c data) rem (+ order 1)))))))
 
-
-
 (defn sort-rank-world [system]
   (let [coll (create-sort-coll system)]
     (println "Sorting accordingly to")
     (println coll)
-    (loop [c coll
+    (loop [c coll 
            s system]
       (if (ut/zero-coll? c)
         s
@@ -78,16 +75,44 @@
           (->> (ct/replace-slot-comp s e o p m)
                (recur rem)))))))
 
+(def sort? (atom {:sort {:rank false :suit false}}))
 
-(defn sort-rank [state]
-  (let [system (:world @state)]
-    (when (ut/not-nil? system)
-      (-> (sort-rank-world system) 
-          (ct/update-scene-state! state)))))
+(defn update-sort! [rank? suit?]
+  (let [m {:rank rank?
+           :suit suit?}]
+   (swap! sort? #(assoc % :sort m))))
 
-(defn sort-suit [state]
-  (let [system (:world @state)]
-    (when (ut/not-nil? system)
-      (-> (do (println "NOT IMPLEMENTED!!")
-              system)
-          (ct/update-scene-state! state)))))
+(defn set-sort-rank! []
+  (let [s (-> @sort? :sort :suit)]
+    (update-sort! true s)))
+
+(defn reset-sort-rank! []
+  (let [s (-> @sort? :sort :suit)]
+    (update-sort! false s)))
+
+(defn get-tweens [world]
+  (let [ents (e/get-all-entities-with-component
+              world t/TweensComponent)]
+    (-> world
+        (e/get-component (first ents) t/TweensComponent)
+        (:tweens))))
+
+(defn no-tweens-active? [tweens-manager]
+  (-> tweens-manager (ut/get-all-tweens-tm) (count) (= 0)))
+
+(defn sort-deck? [system]
+  (let [t (get-tweens system)]
+    (and ;(no-tweens-active? t)
+         true
+         (-> @sort? :sort :rank))))
+
+(defn set-order-has-sorted-state! []
+  (swap! ord/has-sorted-state #(assoc % :sorted true)))
+
+(defn sort-rank [system delta]
+  (if (sort-deck? system)
+    (let [s (sort-rank-world system)]
+      (reset-sort-rank!)
+      (set-order-has-sorted-state!)
+      s)
+    system))
