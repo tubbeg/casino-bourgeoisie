@@ -19,7 +19,7 @@
          sprite (-> world (ct/get-sprite-comp entity) (:sprite))
          [origin-x _] (:pos slot)
          padding 5
-         w (-> sprite (.-width) (/ 2))
+         w (-> sprite (.-width) )
          x (.-x sprite)]
      (< x (- origin-x w))))
 
@@ -28,7 +28,7 @@
          sprite (-> world (ct/get-sprite-comp entity) (:sprite))
          [origin-x _] (:pos slot)
          padding 5
-         w (-> sprite (.-width) (/ 2))
+         w (-> sprite (.-width) )
          x (.-x sprite)]
      (> x (+ origin-x w))))
 
@@ -171,11 +171,15 @@
  (def has-sorted-state (atom {:sorted false}))
 
  (defn swap-if-overlap [system entity]
+   (let [tweens (get-tweens system)
+         s (-> system (ct/get-sprite-comp entity) :sprite)]
    (cond 
+     (not (sprite-has-no-tween? tweens s)) system
+     ;(not (not-dragging? system entity)) system
      (:sorted @has-sorted-state) system
      (overlap-right? system entity) (swap-right system entity)
      (overlap-left? system entity) (swap-left system entity)
-     :else system))
+     :else system)))
 
  (def time-state (atom {:time 0}))
 
