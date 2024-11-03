@@ -4,10 +4,7 @@
              [card.types :as t]
              [card.create.utility :as ct]))
 
-
- (defn log-result [result message]
-   (println message result)
-   result)
+ (def tween-duration 200) ; ms
 
  (defn selected? [system entity]
    (-> (ct/get-sel-comp system entity)
@@ -100,16 +97,8 @@
                (:sprite))
          sx (.-x s)
          sy (.-y s)
-         slot (ct/get-slot-comp world entity)
-         rank (-> world (ct/get-rank-comp entity) :rank)
-         suit (-> world (ct/get-suit-comp entity) :suit)
-         msg "Wrong position?"
          result (-> (almost-identical-position? [sx sy] pos)
                     (not))]
-    ;(when result
-    ;  (println "Rank: " rank "Suit: " suit "Target pos: " pos)
-      ;(check-log-state rank suit [sx sy] pos)
-     ; )
      result))
 
  (defn sprite-has-no-tween? [tween-manager sprite]
@@ -123,7 +112,6 @@
          s (-> world (ct/get-sprite-comp entity) :sprite)]
      (and (not-dragging? world entity)
           (entity-at-wrong-position? world entity pos)
-        ;(no-tweens-active? tweens)
           (sprite-has-no-tween? tweens s))))
 
  (defn randomize-x-slightly [x]
@@ -146,14 +134,9 @@
      [(randomize-x-slightly x) adj-y]))
 
  (defn move-card! [world entity]
-   (let [pos (calc-pos world entity)
-        ;[x y] pos
-        ;tweens (get-tweens world)
-        ;s (ct/get-sprite-comp world entity)
-         ]
+   (let [pos (calc-pos world entity) ]
      (when (move? world entity pos)
-      ;(ut/set-xy-object! (:sprite s) x y)
-       (add-card-tween! world entity pos 150))))
+       (add-card-tween! world entity pos tween-duration))))
 
 
  (defn swap-left [system entity]
@@ -168,30 +151,14 @@
        (next-entity system)
        (ct/swap-slots system entity)))
 
- (def has-sorted-state (atom {:sorted false}))
-
  (defn swap-if-overlap [system entity]
    (let [tweens (get-tweens system)
          s (-> system (ct/get-sprite-comp entity) :sprite)]
    (cond 
-     (not (sprite-has-no-tween? tweens s)) system
-     ;(not (not-dragging? system entity)) system
-     (:sorted @has-sorted-state) system
+     (not (sprite-has-no-tween? tweens s)) system ; very important
      (overlap-right? system entity) (swap-right system entity)
      (overlap-left? system entity) (swap-left system entity)
      :else system)))
-
- (def time-state (atom {:time 0}))
-
- (defn reset-sorted-state! []
-   (swap! has-sorted-state #(assoc % :sorted false)))
-
- (defn add-time! [add]
-   (let [nxt-time (-> @time-state :time (+ add))]
-     (swap! time-state #(assoc % :time nxt-time))))
-
- (defn run? [limit]
-   (> (:time @time-state) limit))
 
  (defn order-deck [system delta-time]
    (loop [s  system
@@ -205,10 +172,5 @@
              (recur rem))))))
 
 (defn order-cards [system dt]
-  (add-time! dt)
-  (if (run? 300)
-    (let [s (order-deck system dt)]
-      (when (:sorted @has-sorted-state)
-        (reset-sorted-state!))
-      s)
-    system))
+  (let [s (order-deck system dt)]
+    s))

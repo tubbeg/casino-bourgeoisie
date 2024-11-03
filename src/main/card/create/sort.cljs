@@ -3,8 +3,7 @@
     [card.create.utility :as ct]
     [brute.entity :as e]
     [utility.core :as ut]
-    [card.types :as t]
-    [card.create.order :as ord]))
+    [card.types :as t]))
 
 (defn sort-suit-world [world])
 
@@ -106,13 +105,10 @@
          true
          (-> @sort? :sort :rank))))
 
-(defn set-order-has-sorted-state! []
-  (swap! ord/has-sorted-state #(assoc % :sorted true)))
 
 (defn sort-rank [system delta]
   (if (sort-deck? system)
     (let [s (sort-rank-world system)]
       (reset-sort-rank!)
-      (set-order-has-sorted-state!)
       s)
     system))
