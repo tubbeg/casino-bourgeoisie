@@ -23,24 +23,35 @@
   (e/get-component world n t/DragComponent))
 (defn get-sprite-comp [world n]
   (e/get-component world n t/SpriteComponent))
+
 (defn get-all-drag-entities [world]
   (e/get-all-entities-with-component
    world t/DragComponent))
+
 (defn get-all-slot-entities [world]
   (e/get-all-entities-with-component
    world t/SlotComponent))
+
 (defn get-all-sel-entities [world]
   (e/get-all-entities-with-component
    world t/SelectComponent))
+
 (defn get-all-sprite-entities [world]
   (e/get-all-entities-with-component
    world t/SpriteComponent))
+
 (defn get-all-discard-entities [world]
   (e/get-all-entities-with-component
    world t/DiscardComponent))
+
+(defn get-all-played-entities [world]
+  (e/get-all-entities-with-component
+   world t/PlayedComponent))
+
 (defn get-all-push-entities [world]
   (e/get-all-entities-with-component
    world t/PushComponent))
+
 (defn remove-push-comp [world name]
   (let [comps (get-push-comp world name)]
     (e/remove-component world name comps)))
@@ -93,6 +104,12 @@
   (let [sl (get-sprite-comp system entity)]
     (-> system
         (e/remove-component entity sl))))
+
+(defn remove-played-comp [system entity]
+  (let [sl (get-played-comp system entity)]
+    (-> system
+        (e/remove-component entity sl))))
+
 
 (defn replace-slot-comp [system entity order pos]
   (-> system
@@ -203,3 +220,13 @@
      (nil? played)
      (nil? push)
      (-> slot nil? not))))
+
+
+(defn remove-card [system entity]
+  (-> system
+      (get-sprite-comp entity)
+      :sprite
+      ut/destroy-sprite!)
+  (-> system
+      (remove-sprite-comp entity)
+      (e/kill-entity entity)))

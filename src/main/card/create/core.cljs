@@ -13,12 +13,14 @@
             [card.create.select :as sel]
             [card.create.sort :as sort]
             [card.create.discard :as discard]
-            [card.create.push :as push]))
+            [card.create.push :as push]
+            [card.create.score :as score]))
 
 (defn add-system-functions
   [system corner-pos def-pos def-push max]
   (-> system
       (sy/add-system-fn dr/on-drag-fn)
+      (sy/add-system-fn (score/score-cards corner-pos))
       (sy/add-system-fn dr/add-comp-if-dragging)
       (sy/add-system-fn dr/remove-comp-if-dragend)
       (sy/add-system-fn (ord/order-cards max))
