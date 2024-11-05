@@ -21,6 +21,15 @@
 (s/defschema Card
   {Suit Rank})
 
+(defn suit-to-default-int [suit]
+  (println "Validating suit" suit)
+  (-> (s/validate Suit suit)
+      (case
+       :clubs 1
+       :hearts 2
+       :spades 3
+       :diamonds 4)))
+
 (defn rank-to-int [rank]
   (-> (s/validate Rank rank)
       (case
@@ -59,13 +68,16 @@
 (defrecord SuitComponent [suit])
 (defrecord ScoreComponent [score])
 ;(defrecord TextureComponent [texture])
-(defrecord SlotComponent [order pos max])
+(defrecord SlotComponent [order pos])
 (defrecord SpriteComponent [sprite])
 
 ;input
 
 (defrecord DragComponent [bool x y])
 (defrecord SelectComponent [])
+(defrecord DiscardComponent [])
+(defrecord PushComponent [])
+(defrecord PlayedComponent [])
 
 ; this is certainly not an ideal way to use
 ; class instances. There are far better ways

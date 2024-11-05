@@ -23,11 +23,9 @@
 (defn add-select? [system entity]
   (let [sprite (-> system
                    (ct/get-sprite-comp entity)
-                   (:sprite))
-        drag (ct/get-drag-comp system entity)]
+                   (:sprite))]
    (and (has-no-select-comp system entity)
-        (ut/selected? sprite)
-        (nil? drag))))
+        (ut/selected? sprite))))
 
 (defn remove-select? [system entity]
   (let [sprite (-> system
@@ -40,7 +38,6 @@
   (* 16000000 (.random js/Math)))
 
 (def my-tint 7329113.367983451)
-
 
 (defn add-select [system entity]
   (let [sel (t/->SelectComponent) 
@@ -56,12 +53,9 @@
     (remove-select? system entity) (rm-sel-comp system entity)
     :else system))
 
-(defn add-remove-select-components [system delta-time]
-  (loop [s system
-         e (ct/get-all-sprite-entities s)]
-    (if (ut/zero-coll? e)
-      s 
-      (-> s
-          (add-or-remove-sel-comp (first e))
-          (recur (next e))))))
 
+(defn add-remove-select-components [system delta-time]
+  (->> system
+       (ct/get-all-sprite-entities) 
+       (filter #(ct/selectable? system %))
+       (reduce #(add-or-remove-sel-comp %1 %2) system)))

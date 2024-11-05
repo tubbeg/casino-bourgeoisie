@@ -12,15 +12,21 @@
             [card.create.order :as ord]
             [card.create.select :as sel]
             [card.create.sort :as sort]
-            [utility.events :as event]))
+            [card.create.discard :as discard]
+            [card.create.push :as push]))
 
-
-
-(defn add-system-functions [system]
+(defn add-system-functions
+  [system corner-pos def-pos def-push max]
   (-> system
       (sy/add-system-fn dr/on-drag-fn)
-      (sy/add-system-fn ord/order-cards)
-      (sy/add-system-fn sort/sort-rank)
+      (sy/add-system-fn dr/add-comp-if-dragging)
+      (sy/add-system-fn dr/remove-comp-if-dragend)
+      (sy/add-system-fn (ord/order-cards max))
+      (sy/add-system-fn sort/sort-deck)
+      (sy/add-system-fn discard/remove-discards)
+      (sy/add-system-fn (discard/move-discards corner-pos def-pos))
+      (sy/add-system-fn push/push-cards)
+      (sy/add-system-fn (push/move-push def-push def-pos))
       (sy/add-system-fn sel/add-remove-select-components)))
 
 (defn add-tweens [system this]
@@ -30,38 +36,46 @@
        (e/add-entity entity)
        (e/add-component entity tweens))))
 
-(defn create-world [this deck position]
+(defn create-world [this deck def-pos canv-pos def-push max]
   (-> (e/create-system)
-      (cr/create-deck this position deck 5)
+      (cr/create-deck this def-pos deck)
       (add-tweens this)
-      (add-system-functions)))
-
-(defn to-def-position [[x y]]
-  [(/ x 4) (/ y 1.6)])
-
+      (add-system-functions canv-pos def-pos def-push max)))
 
 (defn reset-message! []
   (let [msg events/card-message
         ee events/eventEmitter]
-   (event/emit-event ee msg "reset")))
+   (events/emit-event ee msg "reset")))
 
-(defn handle-input-events [data state]
-  (println "Data:" data)
-  (reset-message!)
-  (sort/set-sort-rank!))
+(defn err-msg []
+  (println "NOT IMPLEMENTED"))
+
+(defn handle-input-events [data]
+  ;(println "Data:" data)
+  (reset-message!) 
+  (cond
+    (:rank data) (sort/set-sort-rank!)
+    (:suit data) (sort/set-sort-suit!)
+    (:discard data) (discard/set-discard-state!)
+    (:push data) (push/set-push-state!)
+    :else nil))
 
 (defn creat [this state deck]
-  (let [pos (-> this
-                (ut/get-canvas)
-                (ut/canvas-to-size)
-                (to-def-position))
+  (let [max (count deck)
+        canv-pos (-> this
+                     (ut/get-canvas)
+                     (ut/canvas-to-size))
+        def-pos (-> canv-pos
+                    (ct/to-def-position))
+        def-push (-> canv-pos
+                     (ct/to-def-push-position))
         uim events/ui-message] 
-    (-> (create-world this deck pos)
+    (-> (create-world this deck def-pos canv-pos def-push max)
         (ct/update-scene-state! state))
-    (letfn [(drag [p go x y] (dr/dragging! p go x y state))
-            (dragend [p go x y] (dr/dragend! go state))]
+    (letfn [(drag [p go x y] (dr/dragging! p go x y))
+            (dragend [p go x y] (dr/dragend! go))]
       (ut/in-on-drag! this drag)
       (ut/in-on-dragend! this dragend) 
       (events/add-event-listener!
-       uim #(handle-input-events % state)))))
+       uim #(handle-input-events %)))))
 

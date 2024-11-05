@@ -244,3 +244,6 @@ sprite.postFX.addGlow ();
   (let [t (get-all-tweens-tm tweens-manager)
         f (filter #(tween-has-target? % sprite) t)] 
     (> (count f) 0)))
+
+(defn destroy-sprite! [sprite]
+  (. sprite (destroy)))

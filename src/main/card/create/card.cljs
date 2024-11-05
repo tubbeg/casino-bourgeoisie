@@ -2,12 +2,10 @@
   (:require [brute.entity :as e]
             [utility.core :as ut]
             [card.types :as t]
-            [clojure.core.reducers :as red]))
+            [clojure.core.reducers :as red]
+            [card.create.utility :as ct]
+            [cljs.core :as c]))
 
-(defn calc-x-position [origin-x order sprite margin]
-  (let [w (.-width sprite)
-        mult (*  order (+ w margin))]
-    (+ origin-x mult)))
 
 
 (defn switch-down-ptr [ptr this]
@@ -34,19 +32,19 @@
     ;(ut/set-sprite-scale! s 2)
     s))
 
-(defn create-card [card this [x y] order system m]
+(defn create-card [card this [x y] order system]
   (let [card-entity (e/create-entity)
         suit (-> card (keys) (first))
         rank (-> card (vals) (first))
         margin 15 ; pixels for padding
         txt (str card)
         sprte (add-sprite! this x y txt card-entity)
-        pos-x (calc-x-position x order sprte margin)
+        pos-x (ct/calc-x-position x order sprte margin)
         score (t/rank-to-default-score rank)
         sprite-comp (t/->SpriteComponent sprte)
         rank-comp (t/->RankComponent rank)
         suit-comp (t/->SuitComponent suit)
-        slot-comp (t/->SlotComponent order [pos-x y] m)
+        slot-comp (t/->SlotComponent order [pos-x y])
         score-comp (t/->ScoreComponent score)]
     (add-select! sprte)
     (-> system
@@ -57,14 +55,11 @@
         (e/add-component card-entity slot-comp)
         (e/add-component card-entity score-comp))))
 
-(defn create-deck [system this pos deck m]
-  (loop [s system
-         d deck
-         order 1]
-    (if (ut/zero-coll? d)
-      s
-      (-> d
-          (first)
-          (create-card this pos order s m)
-          (recur (next d) (+ order 1))))))
+(defn create-deck [system this pos deck]
+  (let [coll (for [i (->> deck count range)]
+               {:card (nth deck i)
+                :order (+ i 1)})]
+    (-> #(create-card (:card %2) this pos (:order %2) %1)
+        (reduce system coll))))
+
 

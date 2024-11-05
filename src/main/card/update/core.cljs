@@ -2,9 +2,13 @@
   (:require [brute.system :as sy]
             [utility.core :as ut]))
 
-(comment "time doesn't really matter here,
- no physics or time dependent functions to
- speak of")
+(comment "time is often irrelevant for this program
+    
+    there aren't any physics systems, or many functions
+    that depend on time
+          
+    although animation might be affected sometimes.
+  ")
 
 
 (defn update-game-state! [system state]

@@ -5,13 +5,7 @@
     [utility.core :as ut]
     [card.types :as t]))
 
-(defn sort-suit-world [world])
-
-(defn get-all-ents-with-sprite-slots [world]
-  (let [es (ct/get-all-sprite-entities world)
-         e (ct/get-all-slot-entities world)]
-    (-> (concat es e)
-        (distinct))))
+(def sort? (atom {:sort {:rank false :suit false}}))
 
 (defn sort-slot-rank [world entity]
     (-> world
@@ -20,8 +14,19 @@
         (t/rank-to-int)
         (- 1)))
 
+(defn sort-slot-suit [world entity]
+  (-> world
+      (ct/get-suit-comp entity)
+      (:suit)
+      (t/suit-to-default-int)))
+
 (defn sort-entities-by-rank [ent-coll world]
   (sort-by #(sort-slot-rank world %) ent-coll))
+
+(defn sort-entities-by-suit [ent-coll world]
+  (let [result (sort-by #(sort-slot-suit world %) ent-coll)]
+    (println result)
+    result))
 
 (defn entity-has-order? [world entity order]
   (let [slot (ct/get-slot-comp world entity)]
@@ -39,42 +44,44 @@
 
 (defn get-slot-data [system order]
  (let [sl (-> system
-              (find-slot order))]
-   [(:order sl) (:pos sl) (:max sl)]))
+              (find-slot order))] 
+   [(:order sl) (:pos sl)]))
 
-(defn create-sort-coll [world]
-  (let [ents (-> (get-all-ents-with-sprite-slots world)
-                 (sort-entities-by-rank world))]
-    (loop [c []
-           e ents
-           order 1]
-      (if (ut/zero-coll? e)
-        c
-        (let [f (first e)
-              rem (next e)
-              [o p m] (get-slot-data world order)
-              data {:entity f :order o
-                    :pos p :max m}]
-          (recur (conj c data) rem (+ order 1)))))))
+(defn transform-slot-data [ entity order system]
+  (let [[o p] (get-slot-data system order)]
+    {:entity entity :order o
+     :pos p}))
+
+(defn sort-entities-suit-rank [system type]
+  (if (= type :suit)
+    (-> (ct/get-all-slot-entities system)
+        (sort-entities-by-suit system)) 
+    (-> (ct/get-all-slot-entities system)
+        (sort-entities-by-rank system))))
+
+(defn create-sort-coll [world t]
+  (let [ents (sort-entities-suit-rank world t)
+        coll (for [i (-> ents count range)]
+               {:entity (nth ents i)
+                :order (+ i 1)})
+        f #(->> world 
+                (transform-slot-data (:entity %2) (:order %2))
+                (conj %1))]
+    (->> coll
+         (reduce f [])
+         (filter #(not= (:pos %) nil)))))
+
+(defn sort-world [system coll]
+  (-> #(ct/replace-slot-comp %1 (:entity %2) (:order %2) (:pos %2))
+      (reduce system coll)))
 
 (defn sort-rank-world [system]
-  (let [coll (create-sort-coll system)]
-    (println "Sorting accordingly to")
-    (println coll)
-    (loop [c coll 
-           s system]
-      (if (ut/zero-coll? c)
-        s
-        (let [f (first c)
-              rem (next c)
-              e (:entity f)
-              o (:order f)
-              p (:pos f)
-              m (:max f)]
-          (->> (ct/replace-slot-comp s e o p m)
-               (recur rem)))))))
+  (let [coll (create-sort-coll system :rank)]
+    (sort-world system coll)))
 
-(def sort? (atom {:sort {:rank false :suit false}}))
+(defn sort-suit-world [system]
+  (let [coll (create-sort-coll system :suit)]
+    (sort-world system coll)))
 
 (defn update-sort! [rank? suit?]
   (let [m {:rank rank?
@@ -85,30 +92,36 @@
   (let [s (-> @sort? :sort :suit)]
     (update-sort! true s)))
 
+(defn set-sort-suit! []
+  (let [r (-> @sort? :sort :rank)]
+    (update-sort! r true)))
+
 (defn reset-sort-rank! []
   (let [s (-> @sort? :sort :suit)]
     (update-sort! false s)))
 
-(defn get-tweens [world]
-  (let [ents (e/get-all-entities-with-component
-              world t/TweensComponent)]
-    (-> world
-        (e/get-component (first ents) t/TweensComponent)
-        (:tweens))))
+(defn reset-sort-suit! []
+  (let [r (-> @sort? :sort :rank)]
+    (update-sort! r false)))
 
-(defn no-tweens-active? [tweens-manager]
-  (-> tweens-manager (ut/get-all-tweens-tm) (count) (= 0)))
+(defn sort-deck-by-rank? [] 
+  (-> @sort? :sort :rank))
 
-(defn sort-deck? [system]
-  (let [t (get-tweens system)]
-    (and ;(no-tweens-active? t)
-         true
-         (-> @sort? :sort :rank))))
+(defn sort-deck-by-suit? [] 
+  (-> @sort? :sort :suit))
 
+(defn reset-state-and-sort-by-rank [system]
+  (let [s (sort-rank-world system)]
+    (reset-sort-rank!)
+    s))
 
-(defn sort-rank [system delta]
-  (if (sort-deck? system)
-    (let [s (sort-rank-world system)]
-      (reset-sort-rank!)
-      s)
-    system))
+(defn reset-state-and-sort-by-suit [system]
+    (let [s (sort-suit-world system)]
+      (reset-sort-suit!)
+      s))
+
+(defn sort-deck [system delta-time]
+  (cond
+    (sort-deck-by-rank?) (reset-state-and-sort-by-rank system)
+    (sort-deck-by-suit?) (reset-state-and-sort-by-suit system)
+    :else system))
