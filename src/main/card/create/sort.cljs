@@ -3,7 +3,9 @@
     [card.create.utility :as ct]
     [brute.entity :as e]
     [utility.core :as ut]
-    [card.types :as t]))
+    [card.types :as t]
+    [card.create.draw :as draw]))
+
 
 (def sort? (atom {:sort {:rank false :suit false}}))
 
@@ -90,10 +92,12 @@
 
 (defn set-sort-rank! []
   (let [s (-> @sort? :sort :suit)]
+    (draw/set-latest-sort-state! :suit)
     (update-sort! true s)))
 
 (defn set-sort-suit! []
   (let [r (-> @sort? :sort :rank)]
+    (draw/set-latest-sort-state! :rank)
     (update-sort! r true)))
 
 (defn reset-sort-rank! []

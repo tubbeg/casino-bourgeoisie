@@ -56,12 +56,14 @@
         (remove-discarded-cards system))
       system)))
 
-(defn move-discards [pos def-pos]
+(defn move-discards [hm]
   (fn [system delta-time]
-   (if (discard?)
-     (-> system
-         (set-discard pos)
-         (ct/update-slots def-pos))
-     system)))
+    (let [pos (:canvas hm)
+          def-pos (:origin hm)]
+     (if (discard?)
+       (-> system
+           (set-discard pos)
+           (ct/update-slots def-pos))
+       system))))
 
 

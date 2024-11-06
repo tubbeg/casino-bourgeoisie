@@ -25,18 +25,9 @@
      (not= order 1)
      (< x (- origin-x w)))))
 
-(defn get-max-order [system]
-  (let [f #(->> % (ct/get-slot-comp system) :order)]
-    (->>
-     (ct/get-all-slot-entities system)
-     (sort-by f) 
-     (last)
-     (ct/get-slot-comp system)
-     :order)))
-
 (defn overlap-right?  [world entity]
   (let [slot (ct/get-slot-comp world entity)
-        max-order (get-max-order world)
+        max-order (ct/get-max-order world)
         sprite (-> world (ct/get-sprite-comp entity) (:sprite))
         [origin-x _] (:pos slot)
         order (:order slot)

@@ -14,21 +14,23 @@
             [card.create.sort :as sort]
             [card.create.discard :as discard]
             [card.create.push :as push]
-            [card.create.score :as score]))
+            [card.create.score :as score]
+            [card.create.draw :as draw]))
 
 (defn add-system-functions
-  [system corner-pos def-pos def-push max]
+  [system m max-hand this]
   (-> system
       (sy/add-system-fn dr/on-drag-fn)
-      (sy/add-system-fn (score/score-cards corner-pos))
+      (sy/add-system-fn (draw/draw-cards max-hand this m))
+      (sy/add-system-fn (score/score-cards m))
       (sy/add-system-fn dr/add-comp-if-dragging)
       (sy/add-system-fn dr/remove-comp-if-dragend)
       (sy/add-system-fn (ord/order-cards max))
       (sy/add-system-fn sort/sort-deck)
-      (sy/add-system-fn discard/remove-discards)
-      (sy/add-system-fn (discard/move-discards corner-pos def-pos))
+      (sy/add-system-fn discard/remove-discards) 
+      (sy/add-system-fn (discard/move-discards m))
       (sy/add-system-fn push/push-cards)
-      (sy/add-system-fn (push/move-push def-push def-pos))
+      (sy/add-system-fn (push/move-push m))
       (sy/add-system-fn sel/add-remove-select-components)))
 
 (defn add-tweens [system this]
@@ -38,11 +40,11 @@
        (e/add-entity entity)
        (e/add-component entity tweens))))
 
-(defn create-world [this deck def-pos canv-pos def-push max]
+(defn create-world [this m deck max]
   (-> (e/create-system)
-      (cr/create-deck this def-pos deck)
+      (draw/create-deck deck)
       (add-tweens this)
-      (add-system-functions canv-pos def-pos def-push max)))
+      (add-system-functions m max this)))
 
 (defn reset-message! []
   (let [msg events/card-message
@@ -62,17 +64,22 @@
     (:push data) (push/set-push-state!)
     :else nil))
 
-(defn creat [this state deck]
-  (let [max (count deck)
-        canv-pos (-> this
+(defn creat [this state deck max]
+  (let [canv-pos (-> this
                      (ut/get-canvas)
                      (ut/canvas-to-size))
         def-pos (-> canv-pos
                     (ct/to-def-position))
         def-push (-> canv-pos
                      (ct/to-def-push-position))
+        draw-pos (-> canv-pos
+                     (ct/to-def-draw-position))
+        m {:draw draw-pos
+           :push def-push
+           :origin def-pos
+           :canvas canv-pos}
         uim events/ui-message] 
-    (-> (create-world this deck def-pos canv-pos def-push max)
+    (-> (create-world this m deck max)
         (ct/update-scene-state! state))
     (letfn [(drag [p go x y] (dr/dragging! p go x y))
             (dragend [p go x y] (dr/dragend! go))]

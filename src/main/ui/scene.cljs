@@ -15,27 +15,28 @@
 (def push "./assets/html/push.html")
 (def discard"./assets/html/discard.html")
 (def sort-url "./assets/html/sort.html")
+(def remainder "./assets/html/rem.html")
 
 (defn def-pos [[x y] key]
   (case key
     :discard [(/ x 1.6) (/ y 1.2)]
     :push [(/ x 2.65) (/ y 1.2)]
     :sort [(/ x 2) (/ y 1.2)]
+    :draw [(/ x 1.1) (/ y 2.5)]
     [x y]))
 
 (defn preld [this]
   ;(ut/load-image! this "background" background)
   (ut/load-html-file this "push" push)
   (ut/load-html-file this "discard" discard)
-  (ut/load-html-file this "sort" sort-url))
+  (ut/load-html-file this "sort" sort-url)
+  (ut/load-html-file this "rem" remainder))
 
 ;myButton.addEventListener ('click', callback);
 
 (defn add-click-callback! [element function]
   (. element (addEventListener "click" function)))
 
-(defn emit-event! [message data]
-  (events/emit-event events/eventEmitter message data))
 
 (def input-state (atom {:push false
                         :discard false
@@ -60,7 +61,7 @@
   (toggle-state! input-state :discard))
 
 (defn emit-state! []
-  (emit-event! events/ui-message @input-state))
+  (events/emit-event! events/ui-message @input-state))
 
 (defn update-event! [key] 
   (case key
@@ -102,10 +103,31 @@
            :suit false}]
     (swap! input-state (fn [_] s))))
 
+(defn set-text-html-el! [element text]
+  (set! (. element -textContent) text))
+
+(defn add-text-to-el! [element id text]
+  (-> element
+      (. (getChildByID id))
+      (set-text-html-el! text)))
+
+(defn add-box [this [x y] key]
+  (ut/add-html-dom this x y key))
+
+(defn add-deck-counter [this size]
+  (add-box this (def-pos size :draw) "rem"))
+
+(defn print-the-data [counter data]
+  (let [r (str "Deck: "data)]
+   (add-text-to-el! counter "rem" r)))
+
 (defn creat [this]
   (let [pos (-> this (ut/get-canvas) (ut/canvas-to-size))
-        cr events/card-message] 
+        cr events/card-message
+        r events/remaining-cards-in-deck
+        counter (add-deck-counter this pos)]
     (events/add-event-listener! cr #(reset-input-state!))
+    (events/add-event-listener! r #(print-the-data counter %))
     (add-push-callback! this pos)
     (add-discard-callback! this pos)
     (add-sort-callback! this pos)))

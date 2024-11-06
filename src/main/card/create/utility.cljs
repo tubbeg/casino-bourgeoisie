@@ -7,6 +7,10 @@
 (defn update-scene-state! [new-state old-state]
   (swap! old-state #(assoc % :world new-state)))
 
+(defn get-hidden-comp [world n]
+  (e/get-component world n t/HiddenComponent))
+(defn get-score-comp [world n]
+  (e/get-component world n t/ScoreComponent))
 (defn get-played-comp [world n]
   (e/get-component world n t/PlayedComponent))
 (defn get-push-comp [world n]
@@ -27,6 +31,10 @@
 (defn get-all-drag-entities [world]
   (e/get-all-entities-with-component
    world t/DragComponent))
+
+(defn get-all-hidden-entities [world]
+  (e/get-all-entities-with-component
+   world t/HiddenComponent))
 
 (defn get-all-slot-entities [world]
   (e/get-all-entities-with-component
@@ -52,6 +60,10 @@
   (e/get-all-entities-with-component
    world t/PushComponent))
 
+(defn get-all-rank-entities [world]
+  (e/get-all-entities-with-component
+   world t/RankComponent))
+
 (defn remove-push-comp [world name]
   (let [comps (get-push-comp world name)]
     (e/remove-component world name comps)))
@@ -60,6 +72,9 @@
     (e/remove-component world name comps)))
 (defn remove-sel-comp [world name]
   (let [comps (get-sel-comp world name)]
+    (e/remove-component world name comps)))
+(defn remove-hidden-comp [world name]
+  (let [comps (get-hidden-comp world name)]
     (e/remove-component world name comps)))
 
 (defn add-played-component [system entity]
@@ -180,6 +195,9 @@
 (defn to-def-push-position [[x y]]
   [(/ x 4) (/ y 2.5)])
 
+(defn to-def-draw-position [[x y]]
+  [(/ x 1) (/ y 2.5)])
+
 (defn calc-x-position [origin-x order sprite margin]
   (let [w (.-width sprite)
         mult (*  order (+ w margin))]
@@ -200,6 +218,7 @@
                {:entity (nth ents i)
                 :order (+ i 1)})]
     (reduce #(update-slot-entity %1 %2 def-pos) system coll)))
+
 
 (defn selectable? [system entity]
   (let [drag (get-drag-comp system entity)
@@ -230,3 +249,12 @@
   (-> system
       (remove-sprite-comp entity)
       (e/kill-entity entity)))
+
+(defn get-max-order [system]
+  (let [f #(->> % (get-slot-comp system) :order)]
+    (->>
+     (get-all-slot-entities system)
+     (sort-by f)
+     (last)
+     (get-slot-comp system)
+     :order)))

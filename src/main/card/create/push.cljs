@@ -47,9 +47,11 @@
 (defn adjust-slots-after-push [ def-pos system]
   (ct/update-slots system def-pos))
 
-(defn move-push [push-pos def-pos] 
+(defn move-push [hm] 
   (fn [system delta-time]
-      (let [ents (ct/get-all-push-entities system)]
+      (let [push-pos (:push hm)
+            def-pos (:origin hm)
+            ents (ct/get-all-push-entities system)]
         (if (ut/zero-coll? ents)
           system
           (->> (for [i (-> ents count range)]

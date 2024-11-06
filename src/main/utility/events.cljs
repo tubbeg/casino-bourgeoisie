@@ -5,6 +5,7 @@
 
 (def ui-message "input-state")
 (def card-message "reset-input")
+(def remaining-cards-in-deck "deck-rem")
 
 ;eventsCenter.emit('update-count', this.count)
 (defn emit-event [event-emitter message data]
@@ -15,3 +16,6 @@
 
 (defn add-event-listener! [msg function] 
   (add-on-event eventEmitter msg function))
+
+(defn emit-event! [message data]
+  (emit-event eventEmitter message data))

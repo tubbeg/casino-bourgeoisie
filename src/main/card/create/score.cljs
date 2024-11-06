@@ -23,10 +23,11 @@
   (let [next-time (-> @time-state :time-counter (+ dt))]
     (swap! time-state #(assoc % :time-counter next-time))))
 
-(defn move-card [system entity pos]
-  (println "MOVING")
-  (ct/add-card-tween! system entity pos tween-duration)
-  system)
+(defn move-card [system entity hm]
+  (let [pos (:canvas hm)]
+    (println "MOVING")
+    (ct/add-card-tween! system entity pos tween-duration)
+    system))
 
 (def my-tint 7329113.367983451)
 
@@ -47,6 +48,8 @@
   (and (> ct tl)
        (< ct ml)))
 
+
+
 (defn move? [ct ml final]
   (and (> ct ml)
        (< ct final)))
@@ -66,18 +69,18 @@
   (add-time! dt)
   (> (:time @time-state) time-freq))
 
-(defn score-cards [pos]
+(defn score-cards [positions]
   (fn [system delta-time]
     (if (time-freq? delta-time)
       (let [ents (ct/get-all-played-entities system)
-            total (count ents)
+            tot (count ents)
             ct (:time-counter @time-state)
-            f #(score-card-entity %1 %2 pos total ct)]
+            f #(score-card-entity %1 %2 positions tot ct)]
         (reset-time!)
-        (if (> total 0)
+        (if (> tot 0)
           (do
             (add-time-counter! delta-time)
-            (->> (for [i (range total)]
+            (->> (for [i (range tot)]
                    {:entity (nth ents i)
                     :order (+ i 1)})
                  (reduce f system)))

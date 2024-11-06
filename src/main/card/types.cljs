@@ -78,6 +78,7 @@
 (defrecord DiscardComponent [])
 (defrecord PushComponent [])
 (defrecord PlayedComponent [])
+(defrecord HiddenComponent [])
 
 ; this is certainly not an ideal way to use
 ; class instances. There are far better ways
